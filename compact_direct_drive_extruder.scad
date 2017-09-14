@@ -10,6 +10,7 @@
 // changed: 2015-03-17, updated idler for better MK7 drive gear support
 // changed: 2015-10-13, designed alternative idler to solve breaking of bearing support
 
+// changed: 2017-09-14, several improvements, see git log
 
 /*
 	design goals:
@@ -23,39 +24,52 @@
 epsilon = 0.01;
 
 // increase this if your slicer or printer make holes too tight
-extra_radius = 0.1;
+extra_radius = 0.2;
 
 // major diameter of metric 3mm thread
 m3_major = 2.85;
 m3_radius = m3_major / 2 + extra_radius;
 m3_wide_radius = m3_major / 2 + extra_radius + 0.2;
 
+m4_major = 3.8;
+m4_radius = m4_major / 2 + extra_radius;
+m4_wide_radius = m4_major / 2 + extra_radius + 0.2;
+
 // diameter of metric 3mm hexnut screw head
 m3_head_radius = 3 + extra_radius;
+m4_head_radius = 4 + extra_radius;
 
 // drive gear
-drive_gear_outer_radius = 8.00 / 2;
-drive_gear_hobbed_radius = 6.35 / 2;
-drive_gear_hobbed_offset = 3.2;
-drive_gear_length = 13;
+drive_gear_outer_radius = 9.00 / 2;
+drive_gear_hobbed_radius = 7 / 2;
+drive_gear_hobbed_offset = 3.35;
+drive_gear_length = 11;
 drive_gear_tooth_depth = 0.2;
+
+//push fit connector
+//pushfit_radius = 2.55;    //M6
+pushfit_radius = 2.25;    //M5
+
+idler_bearing_screw_hole_radius = 1.8;  //2.5 for M5, 1.8 dor M4
 
 // base width for frame plate
 base_width = 15;
-base_length = 60;
-base_height = 5;
+base_length = 64;
+body_thickness = 9;
+
+base_thickness = 6;
 
 // nema 17 dimensions
 nema17_width = 42.3;
 nema17_hole_offsets = [
-	[-15.5, -15.5, 1.5],
-	[-15.5,  15.5, 1.5],
-	[ 15.5, -15.5, 1.5],
-	[ 15.5,  15.5, 1.5 + base_height]
+	[-15.5, -15.5, 3],
+	[-15.5,  15.5, 3],
+	[ 15.5, -15.5, 3],
+	[ 15.5,  15.5, 3 + body_thickness]
 ];
 
 // inlet type
-inlet_type = 0; // 0:normal, 1:push-fit
+inlet_type = 1; // 0:normal, 1:push-fit
 
 
 // filament
@@ -63,7 +77,7 @@ filament_diameter = 1.75; // 1.75, 3.00
 filament_offset = [
 	drive_gear_hobbed_radius + filament_diameter / 2 - drive_gear_tooth_depth,
 	0,
-	base_height + drive_gear_length - drive_gear_hobbed_offset - 2.5
+	body_thickness + drive_gear_length - drive_gear_hobbed_offset - 2.5
 ];
 
 
@@ -88,7 +102,7 @@ module nema17_mount()
 {
 	// settings
 	width = nema17_width;
-	height = base_height;
+	height = body_thickness;
 	edge_radius = 27;
 	axle_radius = drive_gear_outer_radius + 1 + extra_radius;
 
@@ -104,7 +118,7 @@ module nema17_mount()
 		
 		// center hole
 		translate([0, 0, -epsilon]	)
-			cylinder(r = 11.25 + extra_radius, h = base_height + 2 * epsilon, $fn = 32);
+			cylinder(r = 11.25 + extra_radius, h = body_thickness + 2 * epsilon, $fn = 32);
 
 		// axle hole
 		translate([0, 0, -epsilon])
@@ -127,11 +141,12 @@ module frame_mount()
 	// settings
 	width = base_width;
 	length = base_length;
-	height = base_height;
+	height = base_thickness;
 	hole_offsets = [
-		[0,  length / 2 - 6, 2.5],
-		[0, -length / 2 + 6, 2.5]
+		[0,  length / 2 - 6, height / 2],
+		[0, -length / 2 + 6, height / 2]
 	];
+    base_connector_length = 6;
 	corner_radius = 3;
 
 	difference()
@@ -143,17 +158,20 @@ module frame_mount()
 			{
 				translate([0, 0, height / 2])
 					cube([width, length, height], center = true);
-				translate([base_width / 2 - base_height / 2 - corner_radius / 2, 0, height + corner_radius / 2])
-					cube([base_height + corner_radius, nema17_width, corner_radius], center = true);
-				translate([base_width / 2 - base_height / 2, 0, 6])
-					cube([base_height, nema17_width, 12], center = true);
+                // base for fillet
+				translate([base_width / 2 - body_thickness / 2 - corner_radius / 2, 0, height + corner_radius / 2])
+					cube([body_thickness + corner_radius, nema17_width, corner_radius], center = true);
+                // nema17 base connector
+				translate([base_width / 2 - body_thickness / 2, 0, 6 / 2 + height])
+					cube([body_thickness, nema17_width, 6], center = true);
 			}
 
+            // slightly rounded corners of the mounting plate
 			cylinder(r = base_length / 2, h = 100, $fn = 32);
 		}
 
 		// rounded corner
-		translate([base_width / 2 - base_height - corner_radius, 0, height + corner_radius])
+		translate([base_width / 2 - body_thickness - corner_radius, 0, height + corner_radius])
 			rotate([90, 0, 0])
 				cylinder(r = corner_radius, h = nema17_width + 2 * epsilon, center = true, $fn = 32);
 
@@ -161,18 +179,19 @@ module frame_mount()
 		for (a = hole_offsets)
 			translate(a)
 			{
-				cylinder(r = m3_wide_radius, h = height * 2 + 2 * epsilon, center = true, $fn = 16);
-				cylinder(r = m3_head_radius, h = height + epsilon, $fn = 16);
+				cylinder(r = m4_wide_radius, h = height + 2 * epsilon, center = true, $fn = 16);
+                translate([0, 0, height - 3])
+                    cylinder(r = m4_head_radius, h = height + 2 * epsilon, center = true, $fn = 16);
 			}
 
 		// nema17 mounting holes
-		translate([base_width / 2, 0, nema17_width / 2 + base_height])
+		translate([base_width / 2, 0, nema17_width / 2 + height])
 			rotate([0, -90, 0])
 			for (a = nema17_hole_offsets)
 				translate(a)
 				{
-					cylinder(r = m3_radius, h = height * 4, center = true, $fn = 16);
-					cylinder(r = m3_head_radius, h = height + epsilon, $fn = 16);
+					cylinder(r = m3_radius, h = body_thickness * 4, center = true, $fn = 16);
+					cylinder(r = m3_head_radius, h = body_thickness + epsilon, $fn = 16);
 				}
 	}
 }
@@ -184,7 +203,7 @@ module filament_tunnel()
 	// settings
 	width = 8;
 	length = nema17_width;
-	height = filament_offset[2] - base_height + 4;
+	height = filament_offset[2] - body_thickness + 4;
 
 	translate([0, 0, height / 2])
 	{
@@ -197,14 +216,14 @@ module filament_tunnel()
 					cube([width + height, length, height], center = true);
 
 				// inlet strengthening
-				translate([0, -length / 2, -height / 2 + filament_offset[2] - base_height])
+				translate([0, -length / 2, -height / 2 + filament_offset[2] - body_thickness])
 					rotate([90, 0, 0])
-						cylinder(r = 3.5, h = 1, center = true, $fn = 32);
+						cylinder(r = pushfit_radius * 1.5, h = 1, center = true, $fn = 32);
 
 				// outlet strengthening
-				translate([0, length / 2, -height / 2 + filament_offset[2] - base_height])
+				translate([0, length / 2, -height / 2 + filament_offset[2] - body_thickness])
 					rotate([90, 0, 0])
-						cylinder(r = 3.5, h = 1, center = true, $fn = 32);
+						cylinder(r = pushfit_radius * 1.5, h = 1, center = true, $fn = 32);
 
 				// idler tensioner
 				intersection()
@@ -244,20 +263,20 @@ module filament_tunnel()
 			if (inlet_type == 0)
 			{
 				// normal type
-				translate([0, -length / 2 + 1 - epsilon, -height / 2 + filament_offset[2] - base_height])
+				translate([0, -length / 2 + 1 - epsilon, -height / 2 + filament_offset[2] - body_thickness])
 					rotate([90, 0, 0])
 						cylinder(r1 = filament_diameter / 2, r2 = filament_diameter / 2 + 1 + epsilon / 1.554,
 							h = 3 + epsilon, center = true, $fn = 16);
 			}
 			else
 			{
-				// inlet push fit connector m5 hole
-				translate([0, -length / 2 - 1 + 2.5 + epsilon, -height / 2 + filament_offset[2] - base_height])
+				// inlet push fit connector m* hole
+				translate([0, -length / 2 - 1 + 2.5 + epsilon, -height / 2 + filament_offset[2] - body_thickness])
 					rotate([90, 0, 0])
-						cylinder(r = 2.25, h = 5 + 2 * epsilon, center = true, $fn = 16);
+						cylinder(r = pushfit_radius, h = 5 + 2 * epsilon, center = true, $fn = 16);
 
 				// funnel inlet outside
-				translate([0, -length / 2 + 4, -height / 2 + filament_offset[2] - base_height])
+				translate([0, -length / 2 + 4, -height / 2 + filament_offset[2] - body_thickness])
 					rotate([90, 0, 0])
 						cylinder(r1 = filament_diameter / 2, r2 = filament_diameter / 2 + 1,
 							h = 2, center = true, $fn = 16);
@@ -265,24 +284,24 @@ module filament_tunnel()
 			}
 
 			// funnnel outlet inside
-			translate([0, 12, -height / 2 + filament_offset[2] - base_height])
+			translate([0, 12, -height / 2 + filament_offset[2] - body_thickness])
 				rotate([90, 0, 0])
 					cylinder(r1 = filament_diameter / 2, r2 = filament_diameter / 2 + 1.25,
 						h = 8, center = true, $fn = 16);
 
-			// outlet push fit connector m5 hole
-			translate([0, length / 2 + 1 - 2.5 + epsilon, -height / 2 + filament_offset[2] - base_height])
+			// outlet push fit connector m* hole
+			translate([0, length / 2 + 1 - 2.5 + epsilon, -height / 2 + filament_offset[2] - body_thickness])
 				rotate([90, 0, 0])
-					cylinder(r = 2.25, h = 5 + 2 * epsilon, center = true, $fn = 16);
+					cylinder(r = pushfit_radius, h = 5 + 2 * epsilon, center = true, $fn = 32);
 
 			// funnel outlet outside
-			translate([0, length / 2 - 4, -height / 2 + filament_offset[2] - base_height])
+			translate([0, length / 2 - 4, -height / 2 + filament_offset[2] - body_thickness])
 				rotate([90, 0, 0])
 					cylinder(r1 = filament_diameter / 2 + 1, r2 = filament_diameter / 2,
 						h = 2, center = true, $fn = 16);
 
 			// filament path
-			translate([0, 0, -height / 2 + filament_offset[2] - base_height])
+			translate([0, 0, -height / 2 + filament_offset[2] - body_thickness])
 				rotate([90, 0, 0])
 					cylinder(r = filament_diameter / 2 + 2 * extra_radius,
 						h = length + 2 * epsilon, center = true, $fn = 16);
@@ -327,10 +346,10 @@ module idler_608_v1()
 {
 	// settings
 	width = nema17_width;
-	height = filament_offset[2] - base_height + 4;
+	height = filament_offset[2] - body_thickness + 4;
 	edge_radius = 27;
 	hole_offsets = [-width / 2 + 4, width / 2 - 4];
-	bearing_bottom = filament_offset[2] / 2 - base_height / 2 - 6;
+	bearing_bottom = filament_offset[2] / 2 - body_thickness / 2 - 6;
 	offset = drive_gear_hobbed_radius - drive_gear_tooth_depth + filament_diameter;
 	pre_tension = 0.25;
 	gap = 1;
@@ -376,7 +395,7 @@ module idler_608_v1()
 
 		// bearing mount hole
 		translate([offset + 11 - pre_tension, 0, 0])
-			cylinder(r = 2.5, h = 50, center = true, $fn = 32);
+			cylinder(r = idler_bearing_screw_hole_radius, h = 50, center = true, $fn = 32);
 
 		// tensioner bolt slot
 		translate([17.15, -nema17_width / 2 + 4, .25])
@@ -396,7 +415,7 @@ module idler_608_v1()
 
 	}
 
-	translate([offset + 11 - pre_tension, 0, filament_offset[2] - base_height])
+	translate([offset + 11 - pre_tension, 0, filament_offset[2] - body_thickness])
 		%bearing_608zz();
 }
 
@@ -406,10 +425,10 @@ module idler_608_v2()
 {
 	// settings
 	width = nema17_width;
-	height = filament_offset[2] - base_height + 4;
+	height = filament_offset[2] - body_thickness + 4;
 	edge_radius = 27;
 	hole_offsets = [-width / 2 + 4, width / 2 - 4];
-	bearing_bottom = filament_offset[2] / 2 - base_height / 2 - 6;
+	bearing_bottom = filament_offset[2] / 2 - body_thickness / 2 - 6;
 	offset = drive_gear_hobbed_radius - drive_gear_tooth_depth + filament_diameter;
 	pre_tension = 0.25;
 	gap = 1;
@@ -461,7 +480,7 @@ module idler_608_v2()
 
 		// bearing mount hole
 		translate([offset + 11 - pre_tension, 0, 0])
-			cylinder(r = 2.5, h = 50, center = true, $fn = 32);
+			cylinder(r = idler_bearing_screw_hole_radius, h = 50, center = true, $fn = 32);
 
 		// tensioner bolt slot
 		translate([17.15, -nema17_width / 2 + 4, .25])
@@ -482,7 +501,7 @@ module idler_608_v2()
 
 	}
 
-	translate([offset + 11 - pre_tension, 0, filament_offset[2] - base_height])
+	translate([offset + 11 - pre_tension, 0, filament_offset[2] - body_thickness])
 		%bearing_608zz();
 }
 
@@ -494,15 +513,15 @@ module idler_608_v2_splitted()
 	intersection()
 	{
 		idler_608_v2();
-		cube([nema17_width, nema17_width, 17.25 - base_height], center = true);
+		cube([nema17_width, nema17_width, 17.25 - body_thickness], center = true);
 	}
 	
-	translate([nema17_width + 8, 0, filament_offset[2] - base_height + 4 + 2])
+	translate([nema17_width + 8, 0, filament_offset[2] - body_thickness + 4 + 2])
 		rotate([0, 180, 0])
 			difference()
 			{
 				idler_608_v2();
-				cube([nema17_width + 2, nema17_width + 2, 17.25 - base_height], center = true);
+				cube([nema17_width + 3, nema17_width + 2, 17.25 - body_thickness], center = true);
 			}
 	
 }
@@ -515,17 +534,19 @@ module compact_extruder()
 	nema17_mount();
 
 	// mounting plate
-	translate([-nema17_width / 2 - base_height, 0, base_width / 2])
-		rotate([0, 90, 0])
-			frame_mount();
+    if( base_thickness != 0 ) {
+        translate([-nema17_width / 2 - base_thickness, 0, base_width / 2])
+            rotate([0, 90, 0])
+                frame_mount();
+    }
 
 	// filament inlet/outlet
-	translate([filament_offset[0], 0, base_height - epsilon])
+	translate([filament_offset[0], 0, body_thickness - epsilon])
 		filament_tunnel();
 
 	// drive gear
 	color("grey")
-		%translate([0, 0, base_height - 2.5])
+		%translate([0, 0, body_thickness - 2.5])
 			drive_gear();
 
 	// filament
@@ -533,13 +554,16 @@ module compact_extruder()
 		%translate(filament_offset - [0, 0, epsilon])
 			rotate([90, 0, 0])
 				cylinder(r = filament_diameter / 2, h = 100, $fn = 16, center = true);
+
 }
 
+//translate([-nema17_width / 2 - base_thickness, 0, base_width / 2]) rotate([0, 90, 0])
+//    frame_mount();
 
 compact_extruder();
 
-translate([20, 0, 0])
-	idler_608_v1();
-
 //translate([20, 0, 0])
-//	idler_608_v2_splitted();
+//	idler_608_v1();
+
+translate([20, 0, 0])
+	idler_608_v2_splitted();
