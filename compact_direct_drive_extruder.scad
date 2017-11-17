@@ -12,6 +12,7 @@
 
 // changed: 2017-09-14, several improvements, see git log
 // changed: 2017-11-09, several improvements, see git log
+// changed: 2017-11-18, several improvements, see git log
 
 /*
 	design goals:
@@ -45,7 +46,7 @@ m4_head_radius = 4 + extra_radius;
 drive_gear_outer_radius = 9.00 / 2;
 drive_gear_hobbed_radius = 7 / 2;
 drive_gear_hobbed_offset = 3.35;
-drive_gear_hexscrew_offset = 7.9;
+drive_gear_hexscrew_offset = 8.2;
 drive_gear_length = 11;
 drive_gear_tooth_depth = 0.2;
 drive_gear_hole = drive_gear_outer_radius + 1 + extra_radius;
@@ -82,7 +83,7 @@ inlet_type = 1; // 0:normal, 1:push-fit
 
 // filament
 filament_diameter = 1.75; // 1.75, 3.00
-filament_extra_radius = 0.1;
+filament_extra_radius = filament_diameter / 2 + 2 * extra_radius + 0.2;
 filament_offset = [
 	drive_gear_hobbed_radius + filament_diameter / 2 - drive_gear_tooth_depth,
 	0,
@@ -281,7 +282,7 @@ module filament_tunnel()
 				// normal type
 				translate([0, -length / 2 + 1 - epsilon, -height / 2 + filament_offset[2] - body_thickness])
 					rotate([90, 0, 0])
-						cylinder(r1 = filament_diameter / 2, r2 = filament_diameter / 2 + 1 + epsilon / 1.554,
+						cylinder(r1 = filament_extra_radius, r2 = filament_extra_radius + 1 + epsilon / 1.554,
 							h = 3 + epsilon, center = true, $fn = 16);
 			}
 			else
@@ -294,7 +295,7 @@ module filament_tunnel()
 				// funnel inlet outside
 				translate([0, -length/ 2 - pushfit_length_offset + pushfit_depth, -height / 2 + filament_offset[2] - body_thickness])
 					rotate([90, 0, 0])
-						cylinder(r1 = filament_diameter / 2, r2 = filament_diameter / 2 + 1,
+						cylinder(r1 = filament_extra_radius, r2 = filament_extra_radius + 1,
 							h = 2, center = true, $fn = 16);
 
 			}
@@ -303,9 +304,9 @@ module filament_tunnel()
 			translate([0, 0, -height / 2 + filament_offset[2] - body_thickness])
 				union () {
 					rotate([90, 0, 0])
-						cylinder(r1 = filament_diameter / 2 + 1.25, r2 = filament_diameter / 2, h = 8, $fn = 16);
+						cylinder(r1 = filament_extra_radius + 1.25, r2 = filament_extra_radius, h = 8, $fn = 16);
 					rotate([-90, 0, 0])
-						cylinder(r1 = filament_diameter / 2 + 1.25, r2 = filament_diameter / 2, h = 8, $fn = 16);
+						cylinder(r1 = filament_extra_radius + 1.25, r2 = filament_extra_radius, h = 8, $fn = 16);
 				}
 
 			// outlet push fit connector m* hole
@@ -316,13 +317,13 @@ module filament_tunnel()
 			// funnel outlet outside
 			translate([0, length / 2 + pushfit_length_offset - pushfit_depth, -height / 2 + filament_offset[2] - body_thickness])
 				rotate([90, 0, 0])
-					cylinder(r1 = filament_diameter / 2 + 1, r2 = filament_diameter / 2,
+					cylinder(r1 = filament_extra_radius + 1, r2 = filament_extra_radius,
 						h = 2, center = true, $fn = 16);
 
 			// filament path
 			translate([0, 0 - pushfit_length_offset, -height / 2 + filament_offset[2] - body_thickness])
 				rotate([90, 0, 0])
-					cylinder(r = filament_diameter / 2 + filament_extra_radius + 2 * extra_radius,
+					cylinder(r = filament_extra_radius,
 						h = length + 2 * epsilon + 2 * pushfit_length_offset, center = true, $fn = 16);
 			
 			// screw head inlet
