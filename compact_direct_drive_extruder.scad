@@ -13,6 +13,7 @@
 // changed: 2017-09-14, several improvements, see git log
 // changed: 2017-11-09, several improvements, see git log
 // changed: 2017-11-18, several improvements, see git log
+// changed: 2017-11-30, several improvements, see git log
 
 /*
 	design goals:
@@ -46,7 +47,7 @@ m4_head_radius = 4 + extra_radius;
 drive_gear_outer_radius = 9.00 / 2;
 drive_gear_hobbed_radius = 7 / 2;
 drive_gear_hobbed_offset = 3.35;
-drive_gear_hexscrew_offset = 8.2;
+drive_gear_hexscrew_offset = 8.5;
 drive_gear_length = 11;
 drive_gear_tooth_depth = 0.2;
 drive_gear_hole = drive_gear_outer_radius + 1 + extra_radius;
@@ -71,9 +72,9 @@ base_thickness = 6;
 // nema 17 dimensions
 nema17_width = 42.3;
 nema17_hole_offsets = [
-	[-15.5, -15.5, 3],
-	[-15.5,  15.5, 3],
-	[ 15.5, -15.5, 3],
+	[-15.5, -15.5, 4],
+	[-15.5,  15.5, 4],
+	[ 15.5, -15.5, 4],
 	[ 15.5,  15.5, 3 + body_thickness]
 ];
 
@@ -158,7 +159,6 @@ module frame_mount()
 		[0,  length / 2 - 6, height / 2],
 		[0, -length / 2 + 6, height / 2]
 	];
-    base_connector_length = 6;
 	corner_radius = 3;
 
 	difference()
@@ -327,7 +327,7 @@ module filament_tunnel()
 						h = length + 2 * epsilon + 2 * pushfit_length_offset, center = true, $fn = 16);
 			
 			// screw head inlet
-			translate(nema17_hole_offsets[2] - [filament_offset[0], 0, height / 2 + 3])
+			translate(nema17_hole_offsets[2] - [filament_offset[0], 0, height / 2 + nema17_hole_offsets[2][2]])
 				sphere(r = m3_head_radius, $fn = 32);
 			
 		}
@@ -635,9 +635,9 @@ module pushfit_support () {
 difference() {
 	compact_extruder();
 	// drive_gear_hexscrew
-	translate([0, 0, filament_offset[2] + drive_gear_hobbed_offset - drive_gear_hexscrew_offset])
+	translate([nema17_width / 2 + epsilon, 0, filament_offset[2] + drive_gear_hobbed_offset - drive_gear_hexscrew_offset])
 		rotate([90, 0, -90])
-			cylinder(r = 1.5, h = 30, $fn = 16);
+			cylinder(r = 2, h = nema17_width + base_thickness + 2 * epsilon, $fn = 16);
 }
 
 //translate([20, 0, 0])
