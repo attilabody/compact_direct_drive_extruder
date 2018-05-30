@@ -14,6 +14,7 @@
 // changed: 2017-11-09, several improvements, see git log
 // changed: 2017-11-18, several improvements, see git log
 // changed: 2017-11-30, several improvements, see git log
+// changed: 2018-05-30, see git log
 
 /*
 	design goals:
@@ -22,6 +23,11 @@
 	- use 608zz bearing
 	- use M5 push fit connector
 */
+
+direction_invert = false;
+generate_idler = true;
+generate_extruder = true;
+generate_holder = true;
 
 // avoid openscad artefacts in preview
 epsilon = 0.01;
@@ -581,7 +587,7 @@ module compact_extruder()
 	nema17_mount();
 
 	// mounting plate
-    if( base_thickness != 0 ) {
+    if(( generate_holder) && (base_thickness != 0 )) {
         translate([-nema17_width / 2 - base_thickness, 0, base_width / 2])
             rotate([0, 90, 0])
                 frame_mount();
@@ -632,17 +638,25 @@ module pushfit_support () {
 //translate([-nema17_width / 2 - base_thickness, 0, base_width / 2]) rotate([0, 90, 0])
 //    frame_mount();
 
-difference() {
-	compact_extruder();
-	// drive_gear_hexscrew
-	translate([nema17_width / 2 + epsilon, 0, filament_offset[2] + drive_gear_hobbed_offset - drive_gear_hexscrew_offset])
-		rotate([90, 0, -90])
-			cylinder(r = 2, h = nema17_width + base_thickness + 2 * epsilon, $fn = 16);
-}
-
 //translate([20, 0, 0])
 //	idler_608_v1();
 
-translate([20, 0, 0])
-	idler_608_v2_splitted();
 
+module generate () {
+	mirror([0,(direction_invert)?1:0,0]) {
+		if (generate_extruder)
+			difference() {
+				compact_extruder();
+				// drive_gear_hexscrew
+				translate([nema17_width / 2 + epsilon, 0, filament_offset[2] + drive_gear_hobbed_offset - drive_gear_hexscrew_offset])
+					rotate([90, 0, -90])
+						cylinder(r = 2, h = nema17_width + base_thickness + 2 * epsilon, $fn = 16);
+			}
+
+		if (generate_idler)
+			translate([20, 0, 0])
+				idler_608_v2_splitted();
+	}
+}
+
+generate();
