@@ -15,6 +15,7 @@
 // changed: 2017-11-18, several improvements, see git log
 // changed: 2017-11-30, several improvements, see git log
 // changed: 2018-05-30, see git log
+// changed: 2018-06-09, +idler_mount_hole_depth
 
 /*
 	design goals:
@@ -28,6 +29,7 @@ direction_invert = false;
 generate_idler = true;
 generate_extruder = true;
 generate_holder = true;
+idler_mount_hole_depth = 4;
 
 // avoid openscad artefacts in preview
 epsilon = 0.01;
@@ -524,7 +526,7 @@ module idler_608_v2()
 		translate([15.5, 15.5, 0])
 		{
 			cylinder(r = m3_wide_radius, h = height * 4, center = true, $fn = 16);
-			translate([0, 0, height / 2 + top - 4])
+			translate([0, 0, height / 2 + top - idler_mount_hole_depth])
 				cylinder(r = m3_head_radius, h = height + epsilon, $fn = 16);
 		}
 
