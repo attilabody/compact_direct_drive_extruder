@@ -16,6 +16,7 @@
 // changed: 2017-11-30, several improvements, see git log
 // changed: 2018-05-30, see git log
 // changed: 2018-06-09, +idler_mount_hole_depth
+// changed: 2018-07-17, +idler handle
 
 /*
 	design goals:
@@ -469,13 +470,18 @@ module idler_608_v2()
 		union()
 		{
 			// base
-			translate([0, 0, top / 2])
-			intersection()
-			{
-				cube([width, width, height + top], center = true);
-				cylinder(r = edge_radius, h = height + top + 2 * epsilon, $fn = 128, center = true);
-				translate([offset + 10.65 + gap, 0, 0])
-					cube([15, nema17_width + epsilon, height + top], center = true);
+			translate([0, 0, top / 2]) {
+				intersection()
+				{
+					cube([width, width, height + top], center = true);
+					cylinder(r = edge_radius, h = height + top + 2 * epsilon, $fn = 128, center = true);
+					translate([offset + 10.65 + gap, 0, 0])
+						cube([15, nema17_width + epsilon, height + top], center = true);
+				}
+				// idler handle
+				translate([width / 2 - 8, -width / 2, -(height + top)/2])
+					linear_extrude(height + top)
+						polygon([[-1,5],[5,-10],[7,-10],[8.04,5]]);
 			}
 			
 			// bearing foot enforcement
@@ -556,8 +562,8 @@ module idler_cutter () {
 			cube([30, 18, (17.25 - body_thickness) / 2 + 1]);
 		translate([0, -10, -1])
 			cube([30, 19, bearing_bottom + height / 2 + 4 + 1]);
-		translate([0, -nema17_width / 2 + 4 - 8, -1])
-			cube([30, 16, height / 2 + 0.25 + 1]);
+		translate([0, -nema17_width / 2 + 4 - 18, -1])
+			cube([30, 26, height / 2 + 0.25 + 1]);
 	}
 }
 
