@@ -17,7 +17,7 @@
 // changed: 2018-05-30, see git log
 // changed: 2018-06-09, +idler_mount_hole_depth
 // changed: 2018-07-17, +idler handle
-// changed: 2018-07-18, +idler handle fix
+// changed: 2018-07-18, +idler handle fix, rounded handle
 
 /*
 	design goals:
@@ -481,8 +481,11 @@ module idler_608_v2()
 				}
 				// idler handle
 				translate([width / 2 - 8, -width / 2, -(height + top)/2])
-					linear_extrude(height + top)
-						polygon([[-1,5],[5,-10],[8,-10],[8,7]]);
+					linear_extrude(height + top) {
+						polygon([[-1,5],[4,-8],[8,-8],[8,7]]);
+						translate([6,-8])
+							circle(2, $fn=32);
+					}
 			}
 			
 			// bearing foot enforcement
