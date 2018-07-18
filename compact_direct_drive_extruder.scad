@@ -17,7 +17,7 @@
 // changed: 2018-05-30, see git log
 // changed: 2018-06-09, +idler_mount_hole_depth
 // changed: 2018-07-17, +idler handle
-// changed: 2018-07-18, +idler handle fix, rounded handle
+// changed: 2018-07-18, +idler handle fix, rounded handle, pushfit_start
 
 /*
 	design goals:
@@ -66,6 +66,8 @@ drive_gear_hole = drive_gear_outer_radius + 1 + extra_radius;
 //pushfit_radius = 2.55;    //M6
 pushfit_radius = 3;    //M5 insert nut
 pushfit_depth = 6;     //M5 insert nut
+pushfit_start_radius = 0.2;
+pushfit_start_depth = 1;
 pushfit_house_width = 2;
 pushfit_length_offset = 6;
 
@@ -298,9 +300,11 @@ module filament_tunnel()
 			else
 			{
 				// inlet push fit connector m* hole
-				translate([0, -(length - pushfit_depth) / 2 - pushfit_length_offset - epsilon, -height / 2 + filament_offset[2] - body_thickness])
-					rotate([90, 0, 0])
-						cylinder(r = pushfit_radius, h = pushfit_depth + 2 * epsilon, center = true, $fn = 32);
+				translate([0, - length / 2 - pushfit_length_offset - epsilon, -height / 2 + filament_offset[2] - body_thickness])
+					rotate([-90, 0, 0]) {
+						cylinder(r = pushfit_radius, h = pushfit_depth + 2 * epsilon, $fn = 32);
+						cylinder(r = pushfit_radius + pushfit_start_radius, h = pushfit_start_depth + 2 * epsilon, $fn = 32);
+					}
 
 				// funnel inlet outside
 				translate([0, -length/ 2 - pushfit_length_offset + pushfit_depth, -height / 2 + filament_offset[2] - body_thickness])
@@ -320,9 +324,11 @@ module filament_tunnel()
 				}
 
 			// outlet push fit connector m* hole
-			translate([0, (length - pushfit_depth) / 2 + pushfit_length_offset + epsilon, -height / 2 + filament_offset[2] - body_thickness])
-				rotate([90, 0, 0])
-					cylinder(r = pushfit_radius, h = pushfit_depth + 2 * epsilon, center = true, $fn = 32);
+			translate([0, length / 2 + pushfit_length_offset + epsilon, -height / 2 + filament_offset[2] - body_thickness])
+				rotate([90, 0, 0]) {
+					cylinder(r = pushfit_radius, h = pushfit_depth + 2 * epsilon, $fn = 32);
+					cylinder(r = pushfit_radius + pushfit_start_radius, h = pushfit_start_depth + 2 * epsilon, $fn = 32);
+				}
 
 			// funnel outlet outside
 			translate([0, length / 2 + pushfit_length_offset - pushfit_depth, -height / 2 + filament_offset[2] - body_thickness])
