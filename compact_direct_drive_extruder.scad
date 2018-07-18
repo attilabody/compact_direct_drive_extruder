@@ -17,7 +17,7 @@
 // changed: 2018-05-30, see git log
 // changed: 2018-06-09, +idler_mount_hole_depth
 // changed: 2018-07-17, +idler handle
-// changed: 2018-07-18, +idler handle fix, rounded handle, pushfit_start
+// changed: 2018-07-18, +idler handle fix, rounded handle, pushfit_start, nema17_hole_head_height (changed 4 -> 4.5)
 
 /*
 	design goals:
@@ -32,6 +32,7 @@ generate_idler = true;
 generate_extruder = true;
 generate_holder = true;
 idler_mount_hole_depth = 4;
+nema17_hole_head_height = 4.5;
 
 // avoid openscad artefacts in preview
 epsilon = 0.01;
@@ -84,9 +85,9 @@ base_thickness = 6;
 // nema 17 dimensions
 nema17_width = 42.3;
 nema17_hole_offsets = [
-	[-15.5, -15.5, 4],
-	[-15.5,  15.5, 4],
-	[ 15.5, -15.5, 4],
+	[-15.5, -15.5, nema17_hole_head_height],
+	[-15.5,  15.5, nema17_hole_head_height],
+	[ 15.5, -15.5, nema17_hole_head_height],
 	[ 15.5,  15.5, 3 + body_thickness]
 ];
 
