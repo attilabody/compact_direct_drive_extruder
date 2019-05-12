@@ -31,6 +31,8 @@ direction_invert = false;
 generate_idler = true;
 generate_extruder = true;
 generate_holder = true;
+show_idler = true;
+
 idler_mount_hole_depth = 4;
 nema17_hole_head_height = 4.5;
 
@@ -631,7 +633,7 @@ module compact_extruder()
 module pushfit_support () {
 	pwr = pushfit_radius + pushfit_house_width;
 	union () {
-		linear_extrude(height = 2 * pwr, center = true)
+		linear_extrude(height = 2 * (pwr+epsilon) , center = true)
 			polygon(points=[
 				[1, 0],
 				[-pushfit_length_offset, 0],
@@ -643,7 +645,7 @@ module pushfit_support () {
 			rotate([90, 90, 0])
 				difference () {
 					cylinder(r = pwr , h = pwr + pushfit_length_offset, $fn=32);
-					translate([-pwr, -pwr, 0])
+					translate([-pwr, -pwr, epsilon])
 						cube([2 * pwr, pwr, pwr + pushfit_length_offset]);
 				}
 			rotate([0, -90, 0])
@@ -675,6 +677,9 @@ module generate () {
 		if (generate_idler)
 			translate([20, 0, 0])
 				idler_608_v2_splitted();
+		if (show_idler)
+			%translate([0,0,body_thickness])
+				idler_608_v2();
 	}
 }
 
